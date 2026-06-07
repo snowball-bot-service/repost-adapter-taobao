@@ -80,7 +80,7 @@ const adapter: Adapter = {
   manifest: {
     name: `repost-adapter-${CONST.provider}`,
     provider: CONST.provider,
-    whitelistHosts: ['tb.cn', 'item.taobao.com'],
+    whitelistHosts: ['tb.cn', 'item.taobao.com', 'h5.m.taobao.com'],
     version: 1,
     author: 'Rominwolf',
     billing: {
@@ -92,7 +92,7 @@ const adapter: Adapter = {
     providerInfo: {
       name: '淘宝',
       icon: '🛒',
-      color: '#000000',
+      color: '#FFFFFF',
       bgColor: '#F86323',
     },
   },
@@ -107,7 +107,7 @@ const adapter: Adapter = {
 
     if (!justOneApiToken) {
       ctx.logger.warn(
-        `[${CONST.provider}] 未配置 justOneApiToken, API 请求将以 code 100 (Token 无效) 失败。`,
+        `[${CONST.provider}] 未配置 justOneApiToken, API 请求将以 code 100 (Token 无效) 失败。`
       );
     }
 

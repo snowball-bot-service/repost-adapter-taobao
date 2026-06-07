@@ -1,7 +1,7 @@
 {
-  "name": "repost-adapter-offset-char",
+  "name": "repost-adapter-taobao",
   "version": "1.0.0",
-  "description": "Offset Character Adapter",
+  "description": "Taobao Adapter",
   "author": "Rominwolf",
   "type": "module",
   "main": "./dist/index.cjs",
