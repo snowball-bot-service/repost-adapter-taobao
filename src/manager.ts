@@ -25,12 +25,12 @@ type RepostMethodPayloadMap = {
  * `satisfies` 校验每个 handler 的返回类型与 {@link RepostMethodPayloadMap} 一致。
  */
 const PAYLOAD_FETCHERS = {
-  post: (api: JustOneAPI, itemId: ItemId) => api.fetchTaobaoItemDetail(itemId),
+  post: (api: JustOneAPI, itemId: ItemId, version: "v5" | "v9") => api.fetchTaobaoItemDetail(itemId, version),
   profile: null,
   live: null,
 } satisfies {
   [M in RepostMethod]:
-    | ((api: JustOneAPI, itemId: ItemId) => Promise<RepostMethodPayloadMap[M]>)
+    | ((api: JustOneAPI, itemId: ItemId, version: "v5" | "v9") => Promise<RepostMethodPayloadMap[M]>)
     | null;
 };
 
@@ -65,14 +65,16 @@ export function extractItemId(source: string): ItemId | null {
  * @param api Just One API 客户端实例 (在 initState 中创建)
  * @param method 转发模式
  * @param itemId 商品 ID
+ * @param version
  */
 export async function fetchHandleDataFromAPI<M extends RepostMethod>(
   api: JustOneAPI,
   method: M,
   itemId: ItemId,
+  version: "v5" | "v9" = "v5",
 ): Promise<RepostMethodPayloadMap[M]> {
   const fetcher = PAYLOAD_FETCHERS[method] as
-    | ((api: JustOneAPI, itemId: ItemId) => Promise<RepostMethodPayloadMap[M]>)
+    | ((api: JustOneAPI, itemId: ItemId, version: "v5" | "v9") => Promise<RepostMethodPayloadMap[M]>)
     | null;
 
   // null 项: 该渠道不支持此 method, 返回 null 回调
@@ -80,5 +82,5 @@ export async function fetchHandleDataFromAPI<M extends RepostMethod>(
     return null as RepostMethodPayloadMap[M];
   }
 
-  return fetcher(api, itemId);
+  return fetcher(api, itemId, version);
 }

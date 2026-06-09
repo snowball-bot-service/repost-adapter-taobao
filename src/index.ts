@@ -13,7 +13,10 @@ import {
 } from '@snowball-bot/repost-adapter';
 import { HttpManager } from './utils/http';
 import { extractItemId, fetchHandleDataFromAPI } from './manager';
-import { JustOneApiException, UnsupportedProcessException } from './utils/error';
+import {
+  JustOneApiException,
+  UnsupportedProcessException,
+} from './utils/error';
 import { JustOneAPI } from './just-one-api/just-one-api.api';
 import { TaobaoItem } from './just-one-api/just-one-api.type';
 
@@ -80,7 +83,7 @@ const adapter: Adapter = {
   manifest: {
     name: `repost-adapter-${CONST.provider}`,
     provider: CONST.provider,
-    whitelistHosts: ['tb.cn', 'item.taobao.com', 'h5.m.taobao.com'],
+    whitelistHosts: ['e.tb.cn', 'item.taobao.com', 'h5.m.taobao.com'],
     version: 1,
     author: 'Rominwolf',
     billing: {
@@ -170,7 +173,7 @@ function buildContent(item: TaobaoItem): string {
 /** 构建徽章: 价格 / 店铺信息 */
 function buildBadges(
   item: TaobaoItem,
-  shopTitle: string | null,
+  shopTitle: string | null
 ): RepostBadgeParams[][] {
   const badges: RepostBadgeParams[] = [];
 
@@ -188,7 +191,7 @@ function buildBadges(
 
 async function handleRepostRequest(
   req: AdapterRepostRequestParams,
-  ctx: AdapterContext,
+  ctx: AdapterContext
 ): Promise<AdapterRepostResponsePayload | null> {
   const { logger } = ctx;
 
@@ -201,7 +204,7 @@ async function handleRepostRequest(
     throw new ParseLinkFailedException(
       req.source,
       CONST.provider,
-      '无法解析 itemId (暂不支持 tb.cn 短链, 请使用 item.taobao.com 商品链接)',
+      '无法解析 itemId (暂不支持 tb.cn 短链, 请使用 item.taobao.com 商品链接)'
     );
   }
 
@@ -211,17 +214,41 @@ async function handleRepostRequest(
   // 调用平台 API 拿到商品详情; 业务码失败包装为框架的 FetchPostFailedException
   let detail;
   try {
-    detail = await fetchHandleDataFromAPI(INSTANCE.api!, method, itemId);
+    // 先通过 V5 拿
+    detail = await fetchHandleDataFromAPI(INSTANCE.api!, method, itemId, 'v5');
   } catch (err) {
     if (err instanceof JustOneApiException) {
-      throw new FetchPostFailedException(
-        itemId,
-        CONST.provider,
-        req.source,
-        `[${err.code}] ${err.msg}`,
-      );
+      if (err.code !== 301) {
+        throw new FetchPostFailedException(
+          itemId,
+          CONST.provider,
+          req.source,
+          `[${err.code}] ${err.msg}`
+        );
+      }
+
+      // 如果上游返回 301，则使用 V9 重试
+      try {
+        detail = await fetchHandleDataFromAPI(
+          INSTANCE.api!,
+          method,
+          itemId,
+          'v9'
+        );
+      } catch (err) {
+        if (err instanceof JustOneApiException) {
+          throw new FetchPostFailedException(
+            itemId,
+            CONST.provider,
+            req.source,
+            `[${err.code}] ${err.msg}`
+          );
+        }
+        throw err;
+      }
+    } else {
+      throw err;
     }
-    throw err;
   }
 
   const { item, seller } = detail;
@@ -262,7 +289,7 @@ async function handleRepostRequest(
 
 async function handleProcessingRequest(
   req: AdapterProcessRequestParams,
-  ctx: AdapterContext,
+  ctx: AdapterContext
 ): Promise<AdapterProcessResponsePayload | null> {
   const { logger } = ctx;
   const { method, source } = req;

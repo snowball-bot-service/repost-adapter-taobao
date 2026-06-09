@@ -85,10 +85,13 @@ export class JustOneAPI {
    * GET /api/taobao/get-item-detail/v5?token=<token>&itemId=<itemId>
    *
    * @param itemId 淘宝/天猫上的唯一商品标识符 (商品 ID)
+   * @param version 采集版本，V5: 一毛一次，天猫商品采集不到；V9：两毛一次，天猫商品可以采集到
    */
-  async fetchTaobaoItemDetail(itemId: string): Promise<FetchTaobaoItemDetail> {
+  async fetchTaobaoItemDetail(
+    itemId: string, version: "v5" | "v9" = "v5"
+  ): Promise<FetchTaobaoItemDetail> {
     return this.request<FetchTaobaoItemDetail>(
-      '/api/taobao/get-item-detail/v5',
+      `/api/taobao/get-item-detail/${version}`,
       { itemId },
     );
   }
